@@ -5,15 +5,48 @@
 # Monitors CPU, RAM, and Temperature
 # Sends Discord notification when CPU usage exceeds 80%
 
-
-
-
 WEBHOOK_URL="https://discord.com/api/webhooks/1415215763479986256/gZpP7GOD1dFSAh8EWy7H8DAz9C-Ne9p_casmGvZYHHjdtuTE8fYx9Jo1OQJUsgsmTUVE"
 
-echo "System Monitor Started - Press Ctrl+C to stop"
-echo "Monitoring CPU, RAM, and Temperature..."
-echo "Discord alerts enabled for CPU usage > 80%"
-echo "============================================="
+# Configuration for background execution
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PID_FILE="$SCRIPT_DIR/system-monitor.pid"
+LOG_FILE="$SCRIPT_DIR/system-monitor.log"
+
+# Function to start monitoring in background
+start_background_monitoring() {
+    # Check if already running
+    if [[ -f "$PID_FILE" ]]; then
+        local pid=$(cat "$PID_FILE")
+        if kill -0 "$pid" 2>/dev/null; then
+            echo "System Monitor is already running (PID: $pid)"
+            echo "To stop: kill $pid"
+            exit 1
+        else
+            rm -f "$PID_FILE"
+        fi
+    fi
+    
+    echo "Starting System Monitor in background..."
+    echo "Log file: $LOG_FILE"
+    echo "PID file: $PID_FILE"
+    echo "To stop: kill \$(cat $PID_FILE) or use 'pkill -f system-monitor.sh'"
+    echo "============================================="
+    
+    # Start the monitoring function in background
+    nohup "$0" --monitor > "$LOG_FILE" 2>&1 &
+    echo $! > "$PID_FILE"
+    
+    echo "System Monitor started with PID: $(cat $PID_FILE)"
+    echo "Monitor running in background. Check $LOG_FILE for output."
+    exit 0
+}
+
+# Function to run the actual monitoring
+run_monitor() {
+    echo "System Monitor Started - $(date)"
+    echo "Monitoring CPU, RAM, and Temperature..."
+    echo "Discord alerts enabled for CPU usage > 80%"
+    echo "============================================="
 
 while true; do
     echo "---------------------------------------------"
@@ -100,5 +133,16 @@ EOF
         echo "🚨 ALERT: CPU usage is above 80% (${CPU_USAGE}%) - Discord notification sent"
     fi
 
-    sleep 5
+    sleep 10
 done
+}
+
+# Main execution logic
+# Check if this is being called for background monitoring
+if [[ "$1" == "--monitor" ]]; then
+    # This is the background monitoring process
+    run_monitor
+else
+    # This is the initial call - start background monitoring
+    start_background_monitoring
+fi
