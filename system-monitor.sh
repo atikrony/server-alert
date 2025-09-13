@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 
 WEBHOOK_URL="https://discord.com/api/webhooks/1415215763479986256/gZpP7GOD1dFSAh8EWy7H8DAz9C-Ne9p_casmGvZYHHjdtuTE8fYx9Jo1OQJUsgsmTUVE"
 
@@ -67,7 +67,7 @@ send_discord() {
   local cpu="$1" ram_percent="$2" ram_used="$3" ram_total="$4" disk_percent="$5" disk_info="$6"
   local host ts
   host=$(hostname)
-  ts=$(date '+%Y-%m-%d %H:%M:%S')
+  ts=$(date '+%Y-%b-%d %H:%M:%S')
 
   read -r -d '' JSON_PAYLOAD <<EOF
 {
